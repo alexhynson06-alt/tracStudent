@@ -336,7 +336,7 @@ export default function Profile() {
                     <FaIdCard className="text-gray-400 mt-1" />
                     <div>
                       <label className="block text-xs text-gray-500 uppercase tracking-wider">Student ID</label>
-                      <p className="text-gray-900 font-medium mt-1">{profile.id_number}</p>
+                      <p className="text-gray-900 font-medium mt-1">{String(profile.id_number || '').replace(/\D/g, '')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -400,7 +400,7 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider mb-1"><FaIdCard /> Student ID</div>
-                      <p className="text-gray-900 font-medium">{profile.id_number}</p>
+                      <p className="text-gray-900 font-medium">{String(profile.id_number || '').replace(/\D/g, '')}</p>
                     </div>
                     <div>
                       <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider mb-1"><FaUserTag /> Full Name</div>

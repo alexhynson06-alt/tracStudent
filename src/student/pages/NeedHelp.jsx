@@ -36,7 +36,7 @@ export default function NeedHelp() {
       icon: <AlertCircle className="w-5 h-5" />,
       color: "from-[#1B5E20] to-[#2E7D32]",
       items: [
-        { problem: "Can't login to my TRAC account", solution: "1. Check if your ID number (00-00000) and password are correct\n2. Use 'Forgot Password?' feature to reset via Email\n3. If still issues, visit Registrar's Office at Sanga-Sanga, Bongao Tawi-Tawi with valid ID\n4. Ensure you selected correct institute (ICS, ISCJS, IVTES, IAS, GS)", icon: <AlertCircle className="w-5 h-5 text-[#1B5E20]" /> },
+        { problem: "Can't login to my TRAC account", solution: "1. Check if your ID number (9 digits, no dash) and password are correct\n2. Use 'Forgot Password?' feature to reset via Email\n3. If still issues, visit Registrar's Office at Sanga-Sanga, Bongao Tawi-Tawi with valid ID\n4. Ensure you selected correct institute (ICS, ISCJS, IVTES, IAS, GS)", icon: <AlertCircle className="w-5 h-5 text-[#1B5E20]" /> },
         { problem: "Not receiving email notifications from TRAC", solution: `1. Check your email address in Profile settings\n2. Check spam/junk folder\n3. Add ${contactEmail} to contacts\n4. Update email at Registrar's Office if needed\n5. System sends from ${contactEmail}`, icon: <Mail className="w-5 h-5 text-[#1B5E20]" /> },
         { problem: "Document request not submitting", solution: `1. Check internet connection\n2. Make sure all required fields are filled\n3. Check that quantity does not exceed the configured limit of ${maxCopies}\n4. You can request each document type once per day\n5. Try using Chrome or Edge browser\n6. Check current fees and processing times on the Request Document page`, icon: <FileText className="w-5 h-5 text-[#F9A825]" /> },
         { problem: "Payment confirmation issues at TRAC Cashier", solution: `1. Bring payment receipt to Cashier's Office for verification\n2. Contact Registrar with payment reference number\n3. Keep official receipt safe until document is claimed\n4. TRAC Office Hours: ${officeHours}`, icon: <CreditCard className="w-5 h-5 text-[#2E7D32]" /> },
@@ -61,12 +61,12 @@ export default function NeedHelp() {
       icon: <CheckCircle className="w-5 h-5" />,
       color: "from-[#2E7D32] to-[#1B5E20]",
       items: [
-        { problem: "Account Security at TRAC", solution: "• Never share your password\n• Use strong passwords with special characters\n• Logout from public computers\n• Update password regularly\n• Your ID format: 00-00000", tip: "Security First" },
+        { problem: "Account Security at TRAC", solution: "• Never share your password\n• Use strong passwords with special characters\n• Logout from public computers\n• Update password regularly\n• Your ID format: 9 digits, no dash", tip: "Security First" },
         { problem: "Email Notification Management", solution: `• Keep email address updated in Profile\n• Check spam folder regularly\n• Save Request ID and Queue Number for tracking\n• Add ${contactEmail} to contacts\n• TRAC sends from ${contactEmail}`, tip: "Stay Updated" },
         { problem: "Document Requests at TRAC", solution: `• Double-check the document or form before submitting\n• Quantity limit is ${maxCopies} per request\n• You can only request each type once per day\n• Request early before deadlines\n• Review the current fee and unit on the request form\n• Manual process: Clearance → Library → Cashier → Registrar`, tip: "Plan Ahead" },
         { problem: "Office Visits to TRAC", solution: `• Come during office hours: ${officeHours}\n• Lunch break closed: ${OFFICE.schedule.lunchBreak}\n• Bring valid ID and requirements (Thesis, Diploma, Permanent Record for TOR)\n• Check request status online first\n• Avoid peak hours (lunch, 3-5PM)\n• Location: ${SCHOOL.contact.location}`, tip: "Be Prepared" },
         { problem: "Payment Tips at TRAC", solution: "• Pay the exact amount shown on your request confirmation\n• Keep official receipt safe\n• Bring receipt when claiming documents\n• All payments are made at the Cashier's Office\n• Confirm the fee and fee unit shown on the request form before payment", tip: "Payment Wise" },
-        { problem: "Tracking Requests at TRAC", solution: "• Use Request ID and Queue Number for tracking\n• Check email for status updates\n• Monitor estimated completion date\n• Claim immediately when ready (within 30 days)\n• First-come, first-served basis", tip: "Track Smart" }
+        { problem: "Tracking Requests at TRAC", solution: "• Use Request ID and Queue Number for tracking\n• Check email for status updates\n• Monitor estimated completion date\n• Claim immediately when ready (within 30 days)", tip: "Track Smart" }
       ]
     }
   ];

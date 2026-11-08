@@ -98,7 +98,7 @@ export default function Submitted() {
                 #{queueNumber}
               </p>
               <p className="text-sm text-gray-600">
-                You are <span className="font-semibold text-[#1B5E20]">#{queueNumber}</span> in line for today at {SCHOOL.shortName}
+                  Your queue number is <span className="font-semibold text-[#1B5E20]">#{queueNumber}</span> for today at {SCHOOL.shortName}
               </p>
             </div>
           </div>
@@ -149,10 +149,6 @@ export default function Submitted() {
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Submitted</p>
                 <p className="text-sm text-gray-700">{formatDate(request.date_submitted) || 'Mar 31, 2026, 10:30 AM'}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Est. Completion</p>
-                <p className="text-sm font-medium text-[#1B5E20]">{request.estimated_completion || 'Apr 6, 2026'}</p>
-              </div>
             </div>
           </div>
         </div>
@@ -172,7 +168,7 @@ export default function Submitted() {
                 <div>
                   <p className="font-medium text-gray-800">Wait for Email Notification</p>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    You will receive an <strong>email</strong> when your request status changes. First-come, first-served.
+                    You will receive an <strong>email</strong> when your request status changes.
                   </p>
                 </div>
               </div>

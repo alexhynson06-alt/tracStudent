@@ -21,7 +21,6 @@ export default function Dashboard() {
     role: ""
   });
 
-  const [avgProcessingTime, setAvgProcessingTime] = useState(SYSTEM.queue.avgProcessingTime);
   const [officeHours, setOfficeHours] = useState(OFFICE.schedule.display);
   const [contactEmail, setContactEmail] = useState(SCHOOL.contact.email);
 
@@ -33,7 +32,6 @@ export default function Dashboard() {
         const response = await fetch(`${API_BASE_URL}/public/settings`);
         if (response.ok) {
           const data = await response.json();
-          if (data.avg_processing_time) setAvgProcessingTime(data.avg_processing_time);
           if (data.office_hours) setOfficeHours(data.office_hours);
           if (data.contact_email) setContactEmail(data.contact_email);
         }
@@ -63,10 +61,7 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  const formatStudentId = (id) => {
-    const clean = id.toString().replace(/[-\s]/g, '');
-    return clean.length >= 7 ? `${clean.substring(0, 2)}-${clean.substring(2, 7)}` : id;
-  };
+  const formatStudentId = (id) => String(id || '').replace(/\D/g, '').slice(0, 9);
 
   return (
     <div className="min-h-screen bg-[#F1F8E9] flex flex-col items-center py-8 px-4 font-sans">
@@ -132,13 +127,13 @@ export default function Dashboard() {
               <p className="text-[10px] text-amber-600 mt-1">{OFFICE.schedule.closedNote}</p>
             </div>
           </div>
-          <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4">
             <div className="p-3 bg-[#FFF8E1] rounded-lg text-[#F57F17]"><FaSpinner /></div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Processing</p>
-              <p className="text-sm font-bold text-slate-700">{avgProcessingTime} minutes per request</p>
+              <p className="text-sm font-bold text-slate-700">See request status for live progress</p>
               <p className="text-xs text-slate-500">Regular Requests</p>
-              <p className="text-[10px] text-slate-400 mt-1">First-come, first-served</p>
+              <p className="text-[10px] text-slate-400 mt-1">Request tracking number</p>
             </div>
           </div>
           <div className="flex items-start gap-4">

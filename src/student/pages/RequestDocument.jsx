@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaInfoCircle,
-  FaClock,
   FaEnvelope,
   FaBuilding,
   FaFileAlt,
@@ -11,7 +10,6 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaMoneyBillWave,
-  FaCalendarAlt,
   FaSpinner,
   FaUserGraduate,
   FaUserTie,
@@ -29,12 +27,11 @@ const toRequestItem = (doc) => {
   return {
     value: doc.name || doc.label,
     label: doc.label || doc.name,
-    days: Number(doc.processing_days),
     fee,
     feeUnit,
     feeDisplay: `₱${fee.toFixed(2)} ${unitLabel}`,
     allowedRoles: Array.isArray(doc.allowedRoles) ? doc.allowedRoles : [],
-    allowsMultiple: doc.allowsMultiple ?? category === 'Document',
+    allowsMultiple: doc.allowsMultiple ?? (category === 'Document' || feeUnit !== 'per_copy'),
     multipleLabel: doc.multipleLabel || (feeUnit === 'per_page' ? 'page' : feeUnit === 'per_subject' ? 'subject' : null),
     category,
     active: doc.active !== false
@@ -72,7 +69,8 @@ export default function RequestDocument() {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       try {
-        const user = JSON.parse(userStr)
+        const parsed = JSON.parse(userStr)
+        const user = parsed.user || parsed
         setCurrentUser(user)
       } catch (error) {
         console.error('Error parsing user:', error)
@@ -91,7 +89,7 @@ export default function RequestDocument() {
         if (data.office_hours) setOfficeHours(data.office_hours)
         if (data.contact_email) setContactEmail(data.contact_email)
         const items = Array.isArray(data.document_settings)
-          ? data.document_settings.map(toRequestItem).filter(item => item.value && item.active)
+          ? data.document_settings.map(toRequestItem).filter(item => item.value && item.active && !item.archived)
           : []
         if (!items.length) throw new Error('No request types are currently available. Please contact the Registrar’s Office.')
         setMaxCopies(Number(data.max_copies_per_request) || SYSTEM.requests.maxCopies)
@@ -141,6 +139,7 @@ export default function RequestDocument() {
     } else {
       setAuthError(false)
       setNetworkError(false)
+      setSubmitError('')
     }
   }, [])
 
@@ -216,20 +215,6 @@ export default function RequestDocument() {
     return `₱${total.toFixed(2)}`
   }, [getSelectedItem, formData.copies])
 
-  const getEstimatedCompletionDate = useMemo(() => {
-    if (!getSelectedItem) return null
-    let daysToAdd = getSelectedItem.days
-    let currentDate = new Date()
-    let workingDaysAdded = 0
-    while (workingDaysAdded < daysToAdd) {
-      currentDate.setDate(currentDate.getDate() + 1)
-      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) workingDaysAdded++
-    }
-    return {
-      formatted: currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    }
-  }, [getSelectedItem])
-
   const handleAuthError = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('currentUser')
@@ -239,13 +224,6 @@ export default function RequestDocument() {
   const copiesArray = useMemo(() => {
     return Array.from({ length: maxCopies }, (_, i) => i + 1)
   }, [maxCopies])
-
-  const processingRange = (items) => {
-    const days = items.map(item => item.days).filter(Number.isInteger).sort((left, right) => left - right)
-    if (!days.length) return 'Not available'
-    if (days[0] === days[days.length - 1]) return `${days[0]} working day(s)`
-    return `${days[0]}-${days[days.length - 1]} working days`
-  }
 
   async function submit(e) {
     e.preventDefault()
@@ -270,7 +248,6 @@ export default function RequestDocument() {
         purpose: response.purpose,
         date_submitted: response.date_submitted,
         copies: response.copies,
-        estimated_completion: response.estimated_completion?.formatted || getEstimatedCompletionDate?.formatted,
         tracking_code: response.tracking_code,
         display_name: getSelectedItem?.label || formData.request_type,
         category: getSelectedItem?.category,
@@ -487,23 +464,12 @@ export default function RequestDocument() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-[0.85rem] text-gray-700 mb-3">
-                  <div>
-                    <FaClock className="mr-2 inline text-[#3b8341]" />
-                    Processing: <span className="font-bold">{getSelectedItem.days} day(s)</span>
-                  </div>
+                <div className="mb-3 text-[0.85rem] text-gray-700">
                   <div>
                     <FaMoneyBillWave className="mr-2 inline text-[#3b8341]" />
                     Fee: <span className="font-bold">{getSelectedItem.feeDisplay}</span>
                   </div>
                 </div>
-
-                {getEstimatedCompletionDate && (
-                  <div className="mt-3 border-t border-[#e8e4d9] pt-3 text-[0.85rem] text-gray-600">
-                    <FaCalendarAlt className="mr-2 inline text-[#f5a623]" />
-                    Estimated: <span className="font-bold text-[#3b8341]">{getEstimatedCompletionDate.formatted}</span>
-                  </div>
-                )}
               </div>
             )}
 
@@ -551,13 +517,6 @@ export default function RequestDocument() {
         <h4 className="mb-5 text-xl font-black text-[#1e293b]">Processing Info</h4>
 
         <div className="space-y-3 text-[0.85rem] text-gray-600 mb-6">
-          <div className="flex items-start gap-3">
-            <FaClock className="mt-0.5 shrink-0 text-[#3b8341] text-base" />
-            <div>
-              <div>Documents: {processingRange(documentTypes)}</div>
-              <div>Forms: {processingRange(formTypes)}</div>
-            </div>
-          </div>
           <div className="flex items-center gap-3">
             <FaEnvelope className="shrink-0 text-[#f5a623] text-base" />
             <span>Email notifications for status updates</span>

@@ -111,10 +111,7 @@ export const OFFICE = {
     weekends: "Closed",
   },
   processing: {
-    note: "First-come, first-served basis. Processing time depends on number of requests and queue length.",
-    regular: "3–5 Business Days",
-    documents: "1-6 working days",
-    forms: "1 working day",
+    note: "Processing time depends on request volume and Registrar availability.",
     rushNote: "When there are few people in line, requests are processed quickly. During peak, may take longer.",
   },
   pickup: {
@@ -307,8 +304,8 @@ export const SYSTEM = {
   // Keep same queue/auth/status workflow for v1
   apiBaseUrl: API_BASE_URL,
   auth: {
-    idFormat: "00-00000",
-    idRegex: /^\d{7}$/,
+    idFormat: "000000000",
+    idRegex: /^\d{9}$/,
     passwordRequirements: {
       minLength: 8,
       requireUpper: true,
@@ -318,7 +315,6 @@ export const SYSTEM = {
     }
   },
   queue: {
-    avgProcessingTime: 10, // minutes per request
     refreshInterval: 15000, // 15 seconds
   },
   requests: {

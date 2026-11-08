@@ -74,15 +74,6 @@ const PasswordRequirements = ({ password }) => {
 };
 
 /* =====================================================
-   ID NUMBER FORMATTING (00-00000 format)
-===================================================== */
-const formatIDNumber = (value) => {
-  const numbers = value.replace(/\D/g, '');
-  if (numbers.length <= 2) return numbers;
-  return `${numbers.slice(0, 2)}-${numbers.slice(2, 7)}`;
-};
-
-/* =====================================================
    EMAIL VALIDATION
 ===================================================== */
 const validateEmail = (email) => {
@@ -480,8 +471,7 @@ export default function AuthPage() {
   };
 
   const validateIdNumber = (id) => {
-    const cleanId = id.replace(/[-\s]/g, '');
-    return /^\d{7}$/.test(cleanId);
+    return typeof id === 'string' && /^\d{9}$/.test(id);
   };
 
   const validateYearGraduated = (year) => {
@@ -506,7 +496,7 @@ export default function AuthPage() {
     switch(field) {
       case 'id_number':
         if (isSignUp && !value) newErrors.id_number = 'ID Number is required';
-        else if (isSignUp && !validateIdNumber(value)) newErrors.id_number = 'ID Number must be in format: 00-00000 (7 digits)';
+        else if (isSignUp && !validateIdNumber(value)) newErrors.id_number = 'ID Number must be exactly 9 digits.';
         else delete newErrors.id_number;
         break;
       case 'email':
@@ -620,6 +610,11 @@ export default function AuthPage() {
         setIsLoading(false);
         return;
       }
+      if (!validateIdNumber(formData.id_number)) {
+        setErrors({ id_number: 'ID Number must be exactly 9 digits.' });
+        setIsLoading(false);
+        return;
+      }
       const credentials = { id_number: formData.id_number, password: formData.password };
       const response = await signInUser(credentials);
       if (!response.token) throw new Error('No authentication token received from server');
@@ -669,7 +664,7 @@ export default function AuthPage() {
         throw new Error('Valid email address is required for notifications');
       }
       if (!validateIdNumber(formData.id_number)) {
-        setErrors(prev => ({ ...prev, id_number: 'ID Number must be in format: 00-00000 (7 digits)' }));
+        setErrors(prev => ({ ...prev, id_number: 'ID Number must be exactly 9 digits.' }));
         throw new Error('Invalid ID number format');
       }
       if (!validatePassword(formData.password)) {
@@ -809,9 +804,8 @@ export default function AuthPage() {
               <label className="block text-sm font-medium text-gray-700">ID Number</label>
               <div className="flex items-center mt-1">
                 <FaUser className={iconClass} />
-                <input value={formatIDNumber(formData.id_number)} onChange={(e) => { const raw = e.target.value.replace(/\D/g, ''); handleInputChange('id_number', raw.slice(0, 7)); }} onBlur={() => validateField('id_number', formData.id_number)} placeholder="00-00000" className={inputClass} disabled={isLoading} maxLength={8} required />
+                <input value={formData.id_number} onChange={(e) => handleInputChange('id_number', e.target.value)} onBlur={() => validateField('id_number', formData.id_number)} placeholder="ID number" className={inputClass} disabled={isLoading} inputMode="numeric" pattern="[0-9]{9}" required />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Format: 00-00000</p>
               {errors.id_number && <p className="text-xs text-red-600 mt-1">{errors.id_number}</p>}
             </div>
 
@@ -981,7 +975,7 @@ export default function AuthPage() {
               <label className="block text-sm font-medium text-gray-700">ID Number</label>
               <div className="flex items-center mt-1">
                 <FaUser className={iconClass} />
-                <input value={formatIDNumber(formData.id_number)} onChange={(e) => { const raw = e.target.value.replace(/\D/g, ''); handleInputChange('id_number', raw.slice(0, 7)); }} placeholder="00-00000" className={inputClass} disabled={isLoading} maxLength={8} required />
+                <input value={formData.id_number} onChange={(e) => handleInputChange('id_number', e.target.value)} placeholder="ID number" className={inputClass} disabled={isLoading} inputMode="numeric" pattern="[0-9]{9}" required />
               </div>
               {errors.id_number && <p className="text-xs text-red-600 mt-1">{errors.id_number}</p>}
             </div>

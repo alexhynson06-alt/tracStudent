@@ -31,7 +31,7 @@ export default function FAQ() {
           if (data.contact_email) setContactEmail(data.contact_email);
           if (data.office_hours) setOfficeHours(data.office_hours);
           setCatalog(Array.isArray(data.document_settings)
-            ? data.document_settings.filter(item => item.active !== false && Array.isArray(item.allowedRoles) && item.allowedRoles.length > 0)
+            ? data.document_settings.filter(item => item.active !== false && item.archived !== true && Array.isArray(item.allowedRoles) && item.allowedRoles.length > 0)
             : []);
         } else {
           setCatalogUnavailable(true);
@@ -55,7 +55,7 @@ export default function FAQ() {
     const items = catalog.filter(item => (item.category === 'Forms' ? 'Form' : item.category) === category && item.allowedRoles.includes(role));
     const title = `${role === 'student' ? 'Student' : 'Alumni'} ${category.toLowerCase()}s`;
     return `${title}\n${items.length
-      ? items.map(item => `• ${item.name} – ${feeDescription(item)} | ${item.processing_days} working day(s)`).join('\n')
+      ? items.map(item => `• ${item.name} – ${feeDescription(item)}`).join('\n')
       : '• None currently available'}`;
   };
 
@@ -65,11 +65,7 @@ export default function FAQ() {
       ? `You can request the following at ${SCHOOL.shortName}:\n\n${catalogGroup('student', 'Document')}\n\n${catalogGroup('student', 'Form')}\n\n${catalogGroup('alumni', 'Document')}\n\n${catalogGroup('alumni', 'Form')}`
       : 'The current request catalog is loading. Please check back shortly.';
 
-  const processingAnswer = catalogUnavailable
-    ? 'Current processing times could not be loaded. Please check the Request Document page for the latest information.'
-    : catalog.length
-      ? `Processing times for active requests:\n\n${catalog.map(item => `• ${item.name} – ${item.processing_days} working day(s)`).join('\n')}\n\nProcessing days exclude weekends and holidays. ${OFFICE.processing.note}\n\nOffice Schedule: ${officeHours}\nLunch break: ${OFFICE.schedule.lunchBreak} (closed)`
-      : 'Current processing times are loading. Please check back shortly.';
+  const processingAnswer = `${OFFICE.processing.note}\n\nTrack your request on the Track Status page or through the email updates you receive.\n\nOffice Schedule: ${officeHours}\nLunch break: ${OFFICE.schedule.lunchBreak} (closed)`;
 
   const feeAnswer = catalogUnavailable
     ? 'Current fees could not be loaded. Please check the Request Document page for the latest fee and unit before submitting.'
@@ -84,7 +80,7 @@ export default function FAQ() {
       questions: [
         {
           question: "How do I create an account at TRAC?",
-          answer: `Click 'Sign Up' on the login page. You'll need:\n\n• Your TRAC Student ID Number (00-00000 format)\n• Personal information (Last Name, First Name, Middle Name)\n• Year Level (for students) or Year Graduated (for alumni)\n• Institute and Course (e.g., ICS - BSIT, IAS - BSA, etc.)\n• Email address (required for email notifications)\n• A secure password that meets the requirements\n\nTRAC Institutes: ICS (Computing), ISCJS (Criminology), IVTES (Vocational), IAS (Agriculture), GS (Graduate Studies)`
+          answer: `Click 'Sign Up' on the login page. You'll need:\n\n• Your TRAC Student ID Number (9 digits, no dash)\n• Personal information (Last Name, First Name, Middle Name)\n• Year Level (for students) or Year Graduated (for alumni)\n• Institute and Course (e.g., ICS - BSIT, IAS - BSA, etc.)\n• Email address (required for email notifications)\n• A secure password that meets the requirements\n\nTRAC Institutes: ICS (Computing), ISCJS (Criminology), IVTES (Vocational), IAS (Agriculture), GS (Graduate Studies)`
         },
         {
           question: "How do I reset my password?",
@@ -168,7 +164,7 @@ export default function FAQ() {
       questions: [
         {
           question: "How do I track my request at TRAC?",
-          answer: `There are two ways at ${SCHOOL.shortName}:\n1. Log in to your dashboard – your recent requests are listed there with queue numbers.\n2. Go to the 'Track Status' page and enter your Request ID.\n\nThe statuses you will see are:\n• Pending – Awaiting staff review\n• Processing – Your document is being prepared\n• Ready – Your document is ready for pickup at ${SCHOOL.contact.location}\n• Claimed – You have picked up your document\n• Rejected – The request was declined (reason provided)\n\nOffice: ${officeHours}`
+          answer: `There are two ways at ${SCHOOL.shortName}:\n1. Log in to your dashboard – your recent requests are listed there with queue numbers.\n2. Go to the 'Track Status' page and enter your Request ID.\n\nThe statuses you may see are:\n• Pending – Awaiting staff review\n• Approved – Your request was approved; pay at the Cashier's Office and upload your Official Receipt in Track Status\n• OR Submitted – Your receipt is waiting for Registrar review\n• OR Needs Correction – Read the Registrar's reason and upload a corrected receipt\n• OR Confirmed – Your receipt was accepted and the request can proceed to processing\n• Processing – Your document is being prepared\n• Ready – Your document is ready for pickup at ${SCHOOL.contact.location}\n• Claimed – You have picked up your document\n• Rejected – The request was declined (reason provided)\n\nOffice: ${officeHours}`
         },
         {
           question: "Where do I claim my documents at TRAC?",
@@ -184,7 +180,7 @@ export default function FAQ() {
         },
         {
           question: "How long will my documents be kept at TRAC?",
-          answer: `Documents that are Ready for Pickup are kept for 30 days at ${SCHOOL.shortName} Registrar. After that, they are returned to storage. It is best to claim them as soon as possible once you receive the Ready notification. Processing is first-come, first-served, so queue length affects wait time.`
+          answer: `Documents that are Ready for Pickup are kept for 30 days at ${SCHOOL.shortName} Registrar. After that, they are returned to storage. It is best to claim them as soon as possible once you receive the Ready notification. Processing time depends on request volume and Registrar availability.`
         }
       ]
     },
@@ -198,7 +194,7 @@ export default function FAQ() {
         },
         {
           question: "Is there a mobile app for TRAC REQUEST?",
-          answer: "No separate app is needed. The system is a mobile-responsive website that adjusts automatically to your phone or tablet screen. Simply open your browser and log in as usual. Reuses current architecture for v1 to reduce risk."
+          answer: "No separate app is needed. The system is a mobile-responsive website that adjusts automatically to your phone or tablet screen. Simply open your browser and log in as usual."
         },
         {
           question: "What should I do if I encounter an error?",

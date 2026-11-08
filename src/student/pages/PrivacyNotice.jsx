@@ -52,7 +52,7 @@ export default function PrivacyNotice() {
           <div className="bg-gradient-to-r from-[#1B5E20]/5 to-[#F9A825]/5 p-4 rounded-lg border border-green-100">
             <h4 className="font-semibold text-gray-800 mb-2">What Data We Collect:</h4>
             <ul className="list-disc list-inside text-gray-700 space-y-1">
-              <li>Student ID number (format: 00-00000)</li>
+              <li>Student ID number (9 digits, no dash)</li>
               <li>Full name (Last, First, Middle)</li>
               <li>Year level, institute, and course (BSIT, BSIS, BSCRIM, BTVTED, BTLED, BSHM, BSHRRM, BSHT, BSA, BSF, BSAB, MAEd, MSA, MSAgEd, MSAg.Mgt.)</li>
               <li><span className="font-semibold">Email address</span> (for email notifications)</li>
@@ -78,7 +78,6 @@ export default function PrivacyNotice() {
               <h4 className="font-semibold text-gray-800 mb-2">Queue Management</h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#1B5E20]" />Assign queue numbers and track position</li>
-                <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#1B5E20]" />Process document requests in FIFO order (first-come, first-served)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#1B5E20]" />Update request status (Pending, Processing, Ready, Claimed, Rejected)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#1B5E20]" />Calculate processing times based on document type</li>
               </ul>

@@ -25,9 +25,9 @@ import Toast from '../components/Toast'
 export default function TrackStatus() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const isAuthenticated = Boolean(localStorage.getItem('authToken'))
 
   const [searchInput, setSearchInput] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [requestData, setRequestData] = useState(null)
   const [error, setError] = useState('')
   const [userRequests, setUserRequests] = useState([])
@@ -51,6 +51,7 @@ export default function TrackStatus() {
   const [contactEmail, setContactEmail] = useState(SCHOOL.contact.email)
   const [contactNumber] = useState(SCHOOL.contact.phone)
   const [locationInfo] = useState(SCHOOL.contact.location)
+  const [requestTimeline, setRequestTimeline] = useState([])
 
   useEffect(() => {
     if (!orPreview) return undefined
@@ -126,7 +127,6 @@ export default function TrackStatus() {
       const token = localStorage.getItem('authToken')
       if (!token) {
         setError('You are not logged in. Please login to continue.')
-        setLoading(false)
         return
       }
       const response = await fetch(`${API_BASE_URL}/user/requests`, {
@@ -163,16 +163,28 @@ export default function TrackStatus() {
     } finally { setLoading(false) }
   }, [API_BASE_URL, formatDate])
 
+  const fetchRequestTimeline = useCallback(async (trackingCode) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      if (!token) return []
+      const response = await fetch(`${API_BASE_URL}/user/requests/${trackingCode}/timeline`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+      })
+      const data = await response.json()
+      return response.ok && Array.isArray(data.timeline) ? data.timeline : []
+    } catch {
+      return []
+    }
+  }, [API_BASE_URL])
+
   const fetchRequestDetails = useCallback(async (trackingCode) => {
     setLoading(true)
-    setIsSearching(true)
     setError('')
     setRequestData(null)
     try {
       const token = localStorage.getItem('authToken')
       if (!token) {
         setError('You are not logged in. Please login to continue.')
-        setLoading(false)
         return
       }
       const response = await fetch(`${API_BASE_URL}/user/requests/${trackingCode}`, {
@@ -188,14 +200,10 @@ export default function TrackStatus() {
         purpose: 'Document Request',
         status: data.status,
         amount: calculatedAmount,
-        paymentStatus: 'Unpaid',
+       
         copies: data.copies,
         requestDate: formatFullDate(data.date_sent) || data.date_sent,
         rawDate: data.date_sent,
-        processingTime: data.processing_days_snapshot
-          ? `${data.processing_days_snapshot} working day(s)`
-          : 'Not recorded',
-        estimatedCompletion: formatFullDate(data.estimated_completion_date) || data.estimated_completion_date,
         processed_date: data.processed_date,
         approvedDate: formatFullDate(data.processed_date),
         readyDate: formatFullDate(data.ready_date),
@@ -217,11 +225,13 @@ export default function TrackStatus() {
       setOrNumber(transformedData.orNumber)
       setOrImage(null)
       setOrPreview('')
+      const timeline = await fetchRequestTimeline(trackingCode)
+      setRequestTimeline(timeline)
     } catch (error) {
       console.error('❌ Error fetching request details:', error)
       setError(error.message || `Request not found: ${trackingCode}`)
-    } finally { setLoading(false); setIsSearching(false) }
-  }, [API_BASE_URL, contactNumber, formatFullDate, formatAmount, locationInfo, officeHours])
+    } finally { setLoading(false) }
+  }, [API_BASE_URL, contactNumber, fetchRequestTimeline, formatFullDate, formatAmount, locationInfo, officeHours])
 
   const handleOrFileChange = (file) => {
     setOrUploadError('')
@@ -278,6 +288,8 @@ export default function TrackStatus() {
   useEffect(() => { fetchUserRequests() }, [fetchUserRequests])
   useEffect(() => { if (id) { setSearchInput(id); fetchRequestDetails(id) } }, [id, fetchRequestDetails])
 
+  const handledBy = [...requestTimeline].reverse().find(entry => entry.administrator)?.administrator || null
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (!searchInput.trim()) { setError('Please enter a Request ID'); return }
@@ -318,6 +330,34 @@ export default function TrackStatus() {
   const getPaymentStatusBadge = (status) => status === 'Paid' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
 
   const getTimeline = (status, request) => {
+    if (requestTimeline.length > 0) {
+      return requestTimeline.map(entry => ({
+        title: entry.type === 'or_submitted'
+          ? 'Official Receipt Submitted'
+          : entry.type === 'or_confirmed'
+            ? 'Official Receipt Confirmed'
+            : entry.type === 'or_rejected'
+              ? 'Official Receipt Needs Correction'
+              : entry.status === 'approved'
+                ? 'Request Approved'
+                : entry.status === 'processing'
+                  ? 'Processing'
+                  : entry.status === 'ready'
+                    ? 'Ready for Pickup'
+                    : entry.status === 'claimed'
+                      ? 'Claimed'
+                      : entry.status === 'rejected'
+                        ? 'Request Rejected'
+                        : 'Request Update',
+        description: entry.administrator
+          ? `Handled by ${entry.administrator}${entry.reason ? ` • ${entry.reason}` : ''}`
+          : entry.type === 'or_submitted'
+            ? 'Submitted by you'
+            : entry.reason || (entry.status === 'pending' ? 'Your request has been received by the system' : 'Status updated'),
+        date: entry.timestamp,
+        status: entry.type === 'or_rejected' || entry.status === 'rejected' ? 'rejected' : 'completed'
+      }))
+    }
     const baseTimeline = [{ title: 'Request Submitted', description: 'Your request has been received by the system', date: request.requestDate, status: 'completed' }]
     if (status === 'pending') return [...baseTimeline, { title: 'Pending Approval', description: 'Waiting for registrar staff to review your request', date: '—', status: 'pending' }]
     if (status !== 'pending') baseTimeline.push({ title: 'Request Approved', description: 'Your request was approved. Upload your Official Receipt to continue.', date: request.requestDate, status: 'completed' })
@@ -326,7 +366,7 @@ export default function TrackStatus() {
     if (['or_confirmed', 'processing', 'ready', 'claimed'].includes(status)) baseTimeline.push({ title: 'Official Receipt Confirmed', description: 'Your Official Receipt has been confirmed.', date: request.orUploadedAt, status: 'completed' })
     if (['processing', 'ready', 'claimed'].includes(status)) baseTimeline.push({ title: 'Processing', description: `Your request is being processed. Amount to pay: ₱${request.amount}`, date: request.approvedDate, status: 'completed' })
     if (status === 'ready' || status === 'claimed') baseTimeline.push({ title: 'Ready for Pickup', description: 'Your document is now ready for pickup at the Registrar Office', date: request.readyDate || request.requestDate, status: 'completed' })
-    if (status === 'claimed') baseTimeline.push({ title: 'Claimed', description: `Document claimed. OR Number: ${request.orNumber || 'OR-12345'}`, date: request.claimedDate || request.requestDate, status: 'completed' })
+    if (status === 'claimed') baseTimeline.push({ title: 'Claimed', description: request.orNumber ? `Document claimed. OR Number: ${request.orNumber}` : 'Document claimed.', date: request.claimedDate || request.requestDate, status: 'completed' })
     if (status === 'rejected') baseTimeline.push({ title: 'Request Rejected', description: request.rejectedReason || 'Your request was rejected. Please contact the Registrar Office.', date: request.rejectedDate || request.requestDate, status: 'rejected' })
     return baseTimeline
   }
@@ -385,8 +425,14 @@ export default function TrackStatus() {
           <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-[#1B5E20] to-[#F9A825] bg-clip-text text-transparent">
             Track Your Requests
           </h1>
-          <p className="text-gray-600">{requestData ? '' : 'View and track all your document requests'} - {SCHOOL.shortName}</p>
+          <p className="text-gray-600">{requestData ? '' : 'View and track all your document requests'} </p>
         </div>
+
+        {!isAuthenticated && !loading && !requestData && !id && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            You are not signed in. You can still search by Request ID below, but your recent requests will not be shown until you log in.
+          </div>
+        )}
 
         {!requestData && !id && !loading && userRequests.length > 0 && (
           <div className="mb-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-3 lg:grid-cols-5">
@@ -398,7 +444,7 @@ export default function TrackStatus() {
           </div>
         )}
 
-        {!requestData && !isSearching && !id && (
+        {!requestData && !id && (
           <div className="bg-white rounded-xl shadow-sm border border-green-100 p-6 mb-6">
             <form onSubmit={handleSearch}>
               <div className="flex flex-col md:flex-row gap-3">
@@ -431,6 +477,16 @@ export default function TrackStatus() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {!requestData && !loading && !id && !userRequests.length && isAuthenticated && (
+          <div className="mb-6 rounded-xl border border-green-100 bg-white p-6 text-center shadow-sm">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#F1F8E9] text-[#1B5E20]">
+              <FaFileSignature className="text-2xl" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">No requests yet</h3>
+            <p className="mt-2 text-sm text-gray-600">Start by creating a request, or use the search box above if you already have a Request ID.</p>
           </div>
         )}
 
@@ -499,7 +555,7 @@ export default function TrackStatus() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {requestData.queue_number && (
                 <div className="bg-gradient-to-br from-[#F1F8E9] to-[#DCEDC8] p-4 rounded-xl border border-green-200 shadow-sm">
                   <p className="text-xs text-gray-500 mb-1">Queue Position</p>
@@ -514,16 +570,16 @@ export default function TrackStatus() {
               </div>
 
               <div className="bg-white p-4 rounded-xl border border-green-100">
-                <p className="text-xs text-gray-500 mb-1">Est. Completion</p>
-                <p className="font-medium text-gray-900">{requestData.estimatedCompletion || '—'}</p>
-                <p className="text-xs text-gray-500">{requestData.processingTime}</p>
-              </div>
-
-              <div className="bg-white p-4 rounded-xl border border-green-100">
                 <p className="text-xs text-gray-500 mb-1">Copies</p>
                 <p className="font-medium text-gray-900">{requestData.copies}</p>
                 <p className="text-xs text-gray-500">{requestData.copies === 1 ? '' : 'copies'}</p>
               </div>
+            </div>
+
+            <div className="rounded-xl border border-green-100 bg-white p-4 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Handled by (Registrar Admin)</p>
+              <p className="font-semibold text-[#1B5E20]">{handledBy || 'Not yet assigned - awaiting admin processing'}</p>
+              {handledBy && <p className="mt-1 text-xs text-gray-500">Approach this person at the Registrar Office if you have questions about your request.</p>}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-green-100 p-6">
